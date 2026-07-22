@@ -15,15 +15,10 @@ variable "tags" {
 resource "aws_apigatewayv2_api" "http" {
   name          = "${var.name}-api"
   protocol_type = "HTTP"
-
-  cors_configuration {
-    allow_origins     = ["https://${var.ui_host}", "http://localhost:5173", "http://localhost:3000"]
-    allow_methods     = ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"]
-    allow_headers     = ["authorization", "content-type"]
-    allow_credentials = true
-    max_age           = 3600
-  }
-
+  # CORS is owned by the FastAPI app (Starlette CORSMiddleware), NOT the gateway. With the
+  # gateway also managing CORS, the browser's unauthenticated OPTIONS preflight matched the
+  # JWT-protected $default route and got a 401. Instead we add an unauthenticated OPTIONS
+  # route (below) so the preflight reaches the app's CORS handler.
   tags = var.tags
 }
 
@@ -58,6 +53,16 @@ resource "aws_apigatewayv2_route" "default" {
 resource "aws_apigatewayv2_route" "health" {
   api_id             = aws_apigatewayv2_api.http.id
   route_key          = "GET /health"
+  target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+  authorization_type = "NONE"
+}
+
+# Unauthenticated CORS preflight: browsers send OPTIONS with no Authorization header, so this
+# must bypass the JWT authorizer. It's more specific than $default, so preflights match here
+# and reach the app's CORS middleware.
+resource "aws_apigatewayv2_route" "options" {
+  api_id             = aws_apigatewayv2_api.http.id
+  route_key          = "OPTIONS /{proxy+}"
   target             = "integrations/${aws_apigatewayv2_integration.lambda.id}"
   authorization_type = "NONE"
 }
