@@ -1,0 +1,52 @@
+name: infra ci/cd
+
+# PRs run `tofu plan`. Push to `dev` runs `tofu apply`. Uses AWS OIDC (no long-lived keys)
+# and the Cloudflare token for DNS + ACM validation. Remote state is the S3 bucket + DynamoDB
+# lock created once by ./bootstrap.
+
+on:
+  pull_request:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  AWS_REGION: ap-south-2
+  TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  STATE_BUCKET: wheels-tfstate-432417416277-aps2
+  STATE_KEY: wheels/dev/terraform.tfstate
+  LOCK_TABLE: wheels-tflock
+
+jobs:
+  tofu:
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: opentofu/setup-opentofu@v1
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Tofu init
+        run: |
+          tofu init \
+            -backend-config="bucket=$STATE_BUCKET" \
+            -backend-config="key=$STATE_KEY" \
+            -backend-config="region=$AWS_REGION" \
+            -backend-config="dynamodb_table=$LOCK_TABLE" \
+            -backend-config="encrypt=true"
+
+      - name: Tofu plan
+        if: github.event_name == 'pull_request'
+        run: tofu plan -input=false
+
+      - name: Tofu apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+        run: tofu apply -auto-approve -input=false
