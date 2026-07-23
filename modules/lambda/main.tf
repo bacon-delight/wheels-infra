@@ -84,8 +84,8 @@ resource "aws_iam_role_policy" "lambda" {
         Effect = "Allow"
         Action = [
           "dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem", "dynamodb:Query", "dynamodb:BatchGetItem",
-          "dynamodb:BatchWriteItem"
+          "dynamodb:DeleteItem", "dynamodb:Query", "dynamodb:Scan",
+          "dynamodb:BatchGetItem", "dynamodb:BatchWriteItem"
         ]
         Resource = [var.table_arn, "${var.table_arn}/index/*"]
       },
@@ -140,7 +140,7 @@ resource "aws_iam_role_policy" "lambda" {
         Action = [
           "cognito-idp:AdminCreateUser", "cognito-idp:AdminAddUserToGroup",
           "cognito-idp:AdminGetUser", "cognito-idp:AdminSetUserPassword",
-          "cognito-idp:ListUsers"
+          "cognito-idp:AdminUpdateUserAttributes", "cognito-idp:ListUsers"
         ]
         Resource = [var.cognito_user_pool_arn]
       },
