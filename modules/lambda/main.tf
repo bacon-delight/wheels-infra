@@ -178,7 +178,10 @@ resource "aws_lambda_alias" "api_live" {
   function_version = aws_lambda_function.api.version
 }
 
+# Optional: this account's concurrency ceiling is low, and provisioned concurrency bills
+# even while idle, so it defaults to 0 (disabled). Set > 0 only if the account limit allows.
 resource "aws_lambda_provisioned_concurrency_config" "api" {
+  count                             = var.api_provisioned_concurrency > 0 ? 1 : 0
   function_name                     = aws_lambda_function.api.function_name
   qualifier                         = aws_lambda_alias.api_live.name
   provisioned_concurrent_executions = var.api_provisioned_concurrency

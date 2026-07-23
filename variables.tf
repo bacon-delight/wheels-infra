@@ -72,8 +72,8 @@ variable "api_lambda_memory_mb" {
 
 variable "api_provisioned_concurrency" {
   type        = number
-  default     = 1
-  description = "Warm executions on the API `live` alias (1024MB x 1 ~= $10.80/mo)"
+  default     = 0
+  description = "Warm executions on the API `live` alias (1024MB x 1 ~= $10.80/mo). 0 = disabled; requires enough account concurrency headroom to enable."
 }
 
 # --- LLM ---
