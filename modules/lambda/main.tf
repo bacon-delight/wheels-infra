@@ -5,6 +5,8 @@ variable "api_provisioned_concurrency" { type = number }
 
 variable "table_name" { type = string }
 variable "table_arn" { type = string }
+variable "vehicles_table_name" { type = string }
+variable "vehicles_table_arn" { type = string }
 variable "docs_bucket" { type = string }
 variable "docs_bucket_arn" { type = string }
 
@@ -41,6 +43,7 @@ locals {
     SES_REGION           = var.ses_region
     TEXTRACT_REGION      = var.ses_region
     TABLE_NAME           = var.table_name
+    VEHICLES_TABLE_NAME  = var.vehicles_table_name
     DOCS_BUCKET          = var.docs_bucket
     LLM_PROVIDER         = var.llm_provider
     EXTRACT_MODEL        = var.extract_model
@@ -87,7 +90,10 @@ resource "aws_iam_role_policy" "lambda" {
           "dynamodb:DeleteItem", "dynamodb:Query", "dynamodb:Scan",
           "dynamodb:BatchGetItem", "dynamodb:BatchWriteItem"
         ]
-        Resource = [var.table_arn, "${var.table_arn}/index/*"]
+        Resource = [
+          var.table_arn, "${var.table_arn}/index/*",
+          var.vehicles_table_arn, "${var.vehicles_table_arn}/index/*"
+        ]
       },
       {
         Sid      = "Docs"

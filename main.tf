@@ -26,6 +26,17 @@ module "dynamodb" {
   tags   = local.tags
 }
 
+# Vehicle inventory lives in its own table: org-wide listing and filtering by ownership /
+# status / duty band is a different access pattern from the engagement workflow, and the fleet
+# grows to thousands of rows. The dynamodb module's PK/SK + GSI1 + GSI2 shape fits it as-is.
+#   GSI1 - inventory by ownership, sorted by status then duty band (begins_with slices).
+#   GSI2 - vehicles assigned to an engagement (drives the derived fleet size).
+module "dynamodb_vehicles" {
+  source = "./modules/dynamodb"
+  name   = "${local.name_prefix}-vehicles"
+  tags   = local.tags
+}
+
 module "s3" {
   source       = "./modules/s3"
   name         = "${local.name_prefix}-docs-${data.aws_caller_identity.current.account_id}"
@@ -54,10 +65,12 @@ module "lambda" {
   api_memory_mb               = var.api_lambda_memory_mb
   api_provisioned_concurrency = var.api_provisioned_concurrency
 
-  table_name      = module.dynamodb.table_name
-  table_arn       = module.dynamodb.table_arn
-  docs_bucket     = module.s3.bucket_name
-  docs_bucket_arn = module.s3.bucket_arn
+  table_name          = module.dynamodb.table_name
+  table_arn           = module.dynamodb.table_arn
+  vehicles_table_name = module.dynamodb_vehicles.table_name
+  vehicles_table_arn  = module.dynamodb_vehicles.table_arn
+  docs_bucket         = module.s3.bucket_name
+  docs_bucket_arn     = module.s3.bucket_arn
 
   ingest_queue_arn   = module.pipeline.ingest_queue_arn
   ingest_queue_url   = module.pipeline.ingest_queue_url
