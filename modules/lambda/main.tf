@@ -27,6 +27,14 @@ variable "ses_region" { type = string }
 variable "from_email" { type = string }
 variable "llm_provider" { type = string }
 variable "extract_model" { type = string }
+variable "extract_region" {
+  type    = string
+  default = ""
+}
+variable "extract_max_concurrency" {
+  type    = number
+  default = 6
+}
 
 variable "tags" {
   type    = map(string)
@@ -47,6 +55,10 @@ locals {
     DOCS_BUCKET          = var.docs_bucket
     LLM_PROVIDER         = var.llm_provider
     EXTRACT_MODEL        = var.extract_model
+    # Empty means "the core region". Amazon Nova is not offered in ap-south-2 in any form, so a
+    # Nova model id needs ap-south-1 here or the call fails and falls through to Claude.
+    EXTRACT_REGION           = var.extract_region
+    EXTRACT_MAX_CONCURRENCY  = tostring(var.extract_max_concurrency)
     FROM_EMAIL           = var.from_email
     COGNITO_USER_POOL_ID = var.cognito_user_pool_id
     COGNITO_CLIENT_ID    = var.cognito_client_id

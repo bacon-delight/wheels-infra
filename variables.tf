@@ -83,6 +83,18 @@ variable "extract_model" {
   description = "Bedrock inference-profile id; flip to sonnet-5 when its access is granted"
 }
 
+variable "extract_region" {
+  description = "Region serving EXTRACT_MODEL; empty uses the core region"
+  type        = string
+  default     = ""
+}
+
+variable "extract_max_concurrency" {
+  description = "How many extraction calls run at once"
+  type        = number
+  default     = 6
+}
+
 variable "anthropic_api_key" {
   type        = string
   sensitive   = true

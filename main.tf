@@ -94,7 +94,9 @@ module "lambda" {
   ses_region    = var.ses_region
   from_email    = var.from_email
   llm_provider  = "fallback"
-  extract_model = var.extract_model
+  extract_model           = var.extract_model
+  extract_region          = var.extract_region
+  extract_max_concurrency = var.extract_max_concurrency
   tags          = local.tags
 }
 
