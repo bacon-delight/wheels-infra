@@ -40,7 +40,13 @@ module "dynamodb_vehicles" {
 module "s3" {
   source       = "./modules/s3"
   name         = "${local.name_prefix}-docs-${data.aws_caller_identity.current.account_id}"
-  cors_origins = ["https://${var.ui_host}", "http://localhost:5173", "http://localhost:3000"]
+  # 127.0.0.1 is a different origin from localhost to a browser, and a dev server reached by
+  # the address rather than the name had its uploads blocked with nothing to say why.
+  cors_origins = [
+    "https://${var.ui_host}",
+    "http://localhost:5173", "http://127.0.0.1:5173",
+    "http://localhost:3000", "http://127.0.0.1:3000",
+  ]
   tags         = local.tags
 }
 
