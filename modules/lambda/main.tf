@@ -146,7 +146,10 @@ resource "aws_iam_role_policy" "lambda" {
         Action = [
           "cognito-idp:AdminCreateUser", "cognito-idp:AdminAddUserToGroup",
           "cognito-idp:AdminGetUser", "cognito-idp:AdminSetUserPassword",
-          "cognito-idp:AdminUpdateUserAttributes", "cognito-idp:ListUsers"
+          "cognito-idp:AdminUpdateUserAttributes", "cognito-idp:ListUsers",
+          # Reading an account's groups is how the API tells one of our own people from a
+          # customer contact before granting engagement access.
+          "cognito-idp:AdminListGroupsForUser"
         ]
         Resource = [var.cognito_user_pool_arn]
       },
